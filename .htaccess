@@ -1,0 +1,6 @@
+# Saat document root = folder proyek (bukan public/):
+DirectoryIndex index.php
+Options -Indexes
+# Folder internal tidak boleh diakses dari browser.
+RedirectMatch 404 ^/(?:.*/)?(app|config|database|storage|tools)(/|$)
+RedirectMatch 404 ^/(?:.*/)?(README\.md|package-lock\.json|\.git.*)$
