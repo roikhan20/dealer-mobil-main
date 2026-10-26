@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../../app/bootstrap.php';
 $user = require_role();
+if ($user['role'] === 'owner') redirect('admin/owner_dashboard.php');
 $area = 'staff'; $pdo = db(); $role = $user['role'];
 $one = fn(string $sql, array $p = []) => (function () use ($pdo, $sql, $p) { $s = $pdo->prepare($sql); $s->execute($p); return $s->fetchColumn(); })();
 

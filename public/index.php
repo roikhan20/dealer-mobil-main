@@ -50,8 +50,8 @@ include BASE_PATH . '/app/views/header.php';
 
 <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
   <?php $chipQs = fn(int $id) => http_build_query(array_filter(['brand' => $id ?: null, 'sort' => $sort !== 'price_asc' ? $sort : null])); ?>
-  <a class="brand-chip <?= $b <= 0 ? 'active' : '' ?>" href="<?= e(url('index.php') . ($chipQs(0) ? '?' . $chipQs(0) : '')) ?>">Semua merk</a>
-  <?php foreach ($brands as $br): ?><a class="brand-chip <?= $b == $br['id'] ? 'active' : '' ?>" href="<?= e(url('index.php?' . $chipQs((int)$br['id']))) ?>"><?= e($br['name']) ?></a><?php endforeach; ?>
+  <!-- <a class="brand-chip <?= $b <= 0 ? 'active' : '' ?>" href="<?= e(url('index.php') . ($chipQs(0) ? '?' . $chipQs(0) : '')) ?>">Semua merk</a> -->
+  <!-- <?php foreach ($brands as $br): ?><a class="brand-chip <?= $b == $br['id'] ? 'active' : '' ?>" href="<?= e(url('index.php?' . $chipQs((int)$br['id']))) ?>"><?= e($br['name']) ?></a><?php endforeach; ?> -->
 </div>
 
 <form class="card p-3 mb-4" method="get">

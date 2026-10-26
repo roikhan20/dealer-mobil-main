@@ -1,8 +1,7 @@
 <?php
 require __DIR__ . '/../app/bootstrap.php';
 
-if (auth_user()) redirect('admin/index.php');
-
+if (auth_user()) redirect(auth_user()['role'] === 'owner' ? 'admin/owner_dashboard.php' : 'admin/index.php');
 if (is_post()) {
     // Pembatasan percobaan login sederhana berbasis sesi (tambahkan limiter per-IP di produksi).
     $_SESSION['login_fail'] = $_SESSION['login_fail'] ?? 0;
@@ -18,7 +17,7 @@ if (is_post()) {
             session_regenerate_id(true);
             $_SESSION['login_fail'] = 0;
             $_SESSION['user'] = ['id' => (int)$u['id'], 'name' => $u['name'], 'role' => $u['role']];
-            redirect('admin/index.php');
+                        redirect($u['role'] === 'owner' ? 'admin/owner_dashboard.php' : 'admin/index.php');
         }
         if (++$_SESSION['login_fail'] >= 5) { $_SESSION['login_lock'] = time() + 300; $_SESSION['login_fail'] = 0; }
         flash('danger', 'Email atau password salah.');
