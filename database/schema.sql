@@ -12,7 +12,7 @@ CREATE TABLE users (
   name          VARCHAR(100) NOT NULL,
   email         VARCHAR(150) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role          ENUM('admin_inventaris','sales','service_advisor','manager') NOT NULL,
+  role          ENUM('admin_inventaris','sales','service_advisor','manager','owner') NOT NULL,
   is_active     TINYINT(1) NOT NULL DEFAULT 1,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_users_role_active (role, is_active)
@@ -149,7 +149,7 @@ CREATE TABLE test_drives (
   variant_id INT UNSIGNED NOT NULL,
   scheduled_date DATE NOT NULL,
   scheduled_time TIME NOT NULL,
-  id_photo VARCHAR(255) NOT NULL,       -- file privat di storage/uploads/ids
+  id_photo VARCHAR(255) NULL,           -- opsional; file privat di storage/uploads/ids
   status ENUM('requested','confirmed','done','cancelled') NOT NULL DEFAULT 'requested',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_td_schedule (scheduled_date, scheduled_time),

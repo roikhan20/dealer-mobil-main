@@ -10,7 +10,7 @@
   const $ = (id) => document.getElementById(id);
   const rp = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
   let partners = [];
-  let state = { otr: 0, tenor: 36 };
+  let state = { otr: 0, tenor: 36, quoteUrl: '#' };
 
   const ratesUrl = modalEl.dataset.ratesUrl;
 
@@ -59,6 +59,10 @@
     const first = addm ? installment : 0;
     const tdp = dp + p.admin_fee + insurance + first;
 
+    // Bawa parameter simulasi ke formulir pemesanan agar pelanggan tidak mengisi ulang.
+    const qs = new URLSearchParams({ pay: 'kredit', partner_id: p.id, tenor: state.tenor, dp_percent: dpPct, insurance_type: insType.toUpperCase(), timing: addm ? 'ADDM' : 'ADDB' });
+    $('cc_quote').href = state.quoteUrl + (state.quoteUrl.includes('?') ? '&' : '?') + qs.toString();
+
     $('cc_result').innerHTML = `
       <div class="text-center mb-3">
         <div class="text-secondary small">Estimasi Angsuran / Bulan</div>
@@ -84,7 +88,8 @@
       state.otr = parseFloat(b.dataset.price);
       $('cc_name').textContent = b.dataset.name;
       $('cc_otr').textContent = rp(state.otr);
-      $('cc_quote').href = b.dataset.quoteUrl || '#';
+      state.quoteUrl = b.dataset.quoteUrl || '#';
+      $('cc_quote').href = state.quoteUrl;
     }
     await loadRates();
     renderTenors();

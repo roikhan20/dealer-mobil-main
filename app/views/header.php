@@ -23,9 +23,10 @@ $staffGroups = [
 $publicMenu = [
     ['index.php',           'Katalog',            'grid'],
     ['testdrive.php',       'Test Drive',         'speedometer2'],
-    ['quotation.php',       'Minta Penawaran',    'chat-dots'],
+    ['quotation.php',       'Pesan / Penawaran',  'chat-dots'],
     ['service_booking.php', 'Booking Servis',     'wrench-adjustable'],
-    ['booking_status.php',  'Cek Booking',        'ticket-detailed'],
+    ['cek_status.php',      'Cek Pesanan',        'ticket-detailed'],
+    ['booking_status.php',  'Cek Servis',        'ticket-detailed'],
     ['vin_lookup.php',      'Riwayat Servis',     'search'],
 ];
 $inAdmin = str_contains(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/admin/');

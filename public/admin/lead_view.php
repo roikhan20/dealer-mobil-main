@@ -57,7 +57,7 @@ $wa = preg_replace('/^0/', '62', preg_replace('/\D/', '', $lead['phone']));
       </table>
       <?php $tdFlow = ['requested' => ['confirmed' => 'Konfirmasi', 'cancelled' => 'Batalkan'], 'confirmed' => ['done' => 'Selesai', 'cancelled' => 'Batalkan']];
       foreach ($td as $t): ?><div class="alert alert-info py-2 small">Test drive: <?= e(date('d M Y', strtotime($t['scheduled_date']))) ?> <?= e(substr($t['scheduled_time'], 0, 5)) ?> · <?= badge($t['status']) ?> ·
-        <a href="<?= e(url('admin/file.php?f=' . urlencode($t['id_photo']))) ?>" target="_blank">Lihat KTP/SIM</a>
+        <?= $t['id_photo'] ? '<a href="' . e(url('admin/file.php?f=' . urlencode($t['id_photo']))) . '" target="_blank">Lihat KTP/SIM</a>' : '<span class="text-secondary">KTP belum diunggah (verifikasi di showroom)</span>' ?>
         <?php if (!empty($tdFlow[$t['status']])): ?><div class="mt-2 d-flex gap-1">
           <?php foreach ($tdFlow[$t['status']] as $to => $lbl): ?>
             <form method="post" action="<?= e(url('admin/testdrives.php')) ?>" class="m-0"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$t['id'] ?>"><input type="hidden" name="status" value="<?= $to ?>"><input type="hidden" name="back" value="admin/lead_view.php?id=<?= $id ?>">

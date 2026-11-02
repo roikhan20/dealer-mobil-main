@@ -103,6 +103,14 @@ function has_role(string ...$roles): bool { $u = auth_user(); return $u && in_ar
 
 // ---------- Validasi umum ----------
 const VIN_REGEX = '/^[A-HJ-NPR-Z0-9]{17}$/';
+/** Samakan format nomor: spasi/strip dibuang, +62 / 62 diubah menjadi 0. */
+function normalize_phone(string $p): string
+{
+    $p = preg_replace('/[\s\-\.\(\)]/', '', $p);
+    if (str_starts_with($p, '+62')) return '0' . substr($p, 3);
+    if (str_starts_with($p, '62')) return '0' . substr($p, 2);
+    return $p;
+}
 function valid_phone(string $p): bool { return (bool)preg_match('/^(\+62|62|0)8[0-9]{8,12}$/', $p); }
 function valid_date(string $d): bool { $x = DateTime::createFromFormat('Y-m-d', $d); return $x && $x->format('Y-m-d') === $d; }
 

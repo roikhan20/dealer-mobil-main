@@ -43,4 +43,38 @@ final class LeadService
             throw $e;
         }
     }
+
+    /** Kode referensi yang diberikan ke pelanggan, mis. LD-000012. */
+    public static function ref(int $leadId): string
+    {
+        return 'LD-' . str_pad((string)$leadId, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Pindahkan lead terbuka (cold/warm/hot) dari sales yang dinonaktifkan/diganti peran
+     * ke sales aktif dengan beban paling ringan. Dipanggil di dalam transaksi pemanggil.
+     * Mengembalikan jumlah lead yang berhasil dipindahkan.
+     */
+    public static function reassignOpen(PDO $pdo, int $fromSalesId): int
+    {
+        $ids = $pdo->prepare("SELECT id FROM leads WHERE sales_id = ? AND status IN ('cold','warm','hot') FOR UPDATE");
+        $ids->execute([$fromSalesId]);
+        $moved = 0;
+        $pick = $pdo->prepare(
+            "SELECT u.id FROM users u
+              WHERE u.role = 'sales' AND u.is_active = 1 AND u.id <> ?
+              ORDER BY (SELECT COUNT(*) FROM leads l WHERE l.sales_id = u.id AND l.status IN ('cold','warm','hot')) ASC, u.id ASC
+              LIMIT 1"
+        );
+        foreach ($ids->fetchAll(PDO::FETCH_COLUMN) as $leadId) {
+            $pick->execute([$fromSalesId]);
+            $to = $pick->fetchColumn();
+            if (!$to) break;                       // tidak ada sales aktif lain; biarkan Manajer menanganinya
+            $pdo->prepare('UPDATE leads SET sales_id = ? WHERE id = ?')->execute([$to, $leadId]);
+            $pdo->prepare("INSERT INTO lead_logs(lead_id, user_id, channel, note) VALUES (?, NULL, 'sistem', ?)")
+                ->execute([$leadId, 'Dipindahkan otomatis ke sales lain karena akun sales sebelumnya nonaktif / berubah peran.']);
+            $moved++;
+        }
+        return $moved;
+    }
 }

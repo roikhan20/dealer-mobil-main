@@ -21,11 +21,27 @@ if (is_post()) {
     } elseif ($id === (int)$user['id'] && in_array($act, ['toggle', 'role'], true)) {
         flash('warning', 'Anda tidak dapat menonaktifkan atau mengubah peran akun sendiri.');
     } elseif ($act === 'toggle') {
-        $pdo->prepare('UPDATE users SET is_active = 1 - is_active WHERE id = ?')->execute([$id]);
-        flash('success', 'Status akun diperbarui.');
+        // Bila sales dinonaktifkan, lead terbukanya dipindahkan agar tidak menggantung di akun nonaktif.
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('UPDATE users SET is_active = 1 - is_active WHERE id = ?')->execute([$id]);
+            $chk = $pdo->prepare('SELECT role, is_active FROM users WHERE id = ?'); $chk->execute([$id]); $row = $chk->fetch();
+            $moved = ($row && $row['role'] === 'sales' && !$row['is_active']) ? LeadService::reassignOpen($pdo, $id) : 0;
+            $pdo->commit();
+            flash('success', 'Status akun diperbarui.' . ($moved ? " $moved lead dipindahkan ke sales aktif." : ''));
+        } catch (Throwable $ex) { if ($pdo->inTransaction()) $pdo->rollBack(); error_log($ex->getMessage()); flash('danger', 'Gagal memperbarui akun.'); }
     } elseif ($act === 'role') {
         $role = input('role');
-        if (in_array($role, $roles, true)) { $pdo->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $id]); flash('success', 'Peran diperbarui.'); }
+        if (in_array($role, $roles, true)) {
+            $pdo->beginTransaction();
+            try {
+                $old = $pdo->prepare('SELECT role FROM users WHERE id = ? FOR UPDATE'); $old->execute([$id]); $oldRole = $old->fetchColumn();
+                $pdo->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $id]);
+                $moved = ($oldRole === 'sales' && $role !== 'sales') ? LeadService::reassignOpen($pdo, $id) : 0;
+                $pdo->commit();
+                flash('success', 'Peran diperbarui.' . ($moved ? " $moved lead dipindahkan ke sales aktif." : ''));
+            } catch (Throwable $ex) { if ($pdo->inTransaction()) $pdo->rollBack(); error_log($ex->getMessage()); flash('danger', 'Gagal memperbarui peran.'); }
+        }
     } elseif ($act === 'reset') {
         $pw = (string)($_POST['password'] ?? '');
         if (strlen($pw) < 8) flash('danger', 'Password baru minimal 8 karakter.');

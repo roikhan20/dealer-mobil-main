@@ -60,7 +60,7 @@ include BASE_PATH . '/app/views/header.php';
     <div class="d-grid gap-2">
       <button class="btn btn-gold" data-bs-toggle="modal" data-bs-target="#creditModal" data-price="<?= e($v['price']) ?>" data-name="<?= e($v['brand'] . ' ' . $v['name']) ?>" data-quote-url="<?= e(url('quotation.php?variant=' . (int)$v['id'])) ?>"><i class="bi bi-calculator"></i> Simulasi Kredit</button>
       <a class="btn btn-outline-light" href="<?= e(url('testdrive.php?variant=' . (int)$v['id'])) ?>"><i class="bi bi-speedometer2"></i> Booking Test Drive</a>
-      <a class="btn btn-outline-gold" href="<?= e(url('quotation.php?variant=' . (int)$v['id'])) ?>"><i class="bi bi-chat-dots"></i> Minta Penawaran Harga</a>
+      <a class="btn btn-outline-gold" href="<?= e(url('quotation.php?variant=' . (int)$v['id'])) ?>"><i class="bi bi-cart-check"></i> Pesan / Minta Penawaran</a>
     </div>
   </div>
 </div>

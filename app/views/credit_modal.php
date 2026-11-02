@@ -29,7 +29,7 @@
           <div class="col-md-7" id="cc_result"><div class="text-secondary">Memuat…</div></div>
         </div>
       </div>
-      <div class="modal-footer"><a id="cc_quote" href="#" class="btn btn-gold">Minta Penawaran Resmi</a></div>
+      <div class="modal-footer"><a id="cc_quote" href="#" class="btn btn-gold"><i class="bi bi-cart-check"></i> Lanjut Pesan Mobil Ini</a></div>
     </div>
   </div>
 </div>

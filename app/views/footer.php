@@ -27,6 +27,17 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
   try { localStorage.setItem('theme', next); } catch (_) {}
 });
 </script>
+<script>
+// Foto mobil yang gagal dimuat diganti placeholder, bukan ikon gambar rusak.
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement) || !img.classList.contains('car-img')) return;
+  const ph = document.createElement('div');
+  ph.className = 'car-img-ph';
+  ph.innerHTML = '<i class="bi bi-car-front-fill"></i>';
+  img.replaceWith(ph);
+}, true);
+</script>
 <?php foreach (($extraScripts ?? []) as $s): ?><script src="<?= e($s) ?>"></script><?php endforeach; ?>
 </body>
 </html>

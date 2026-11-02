@@ -20,6 +20,16 @@ final class SpkService
             if (!$unit)                       throw new DomainException('Unit tidak ditemukan.');
             if ($unit['status'] !== 'ready')  throw new DomainException('Unit sudah dibooking sales lain atau sudah terkirim. Pilih unit lain.');
 
+            // 1b) Satu lead hanya boleh punya satu SPK aktif. Kunci baris lead agar dua SPK paralel tidak lolos.
+            if ($in['lead_id']) {
+                $pdo->prepare('SELECT id FROM leads WHERE id = ? FOR UPDATE')->execute([$in['lead_id']]);
+                $dup = $pdo->prepare("SELECT spk_no FROM spk WHERE lead_id = ? AND status = 'active' LIMIT 1");
+                $dup->execute([$in['lead_id']]);
+                if ($ex = $dup->fetchColumn()) {
+                    throw new DomainException('Lead ini sudah memiliki SPK aktif (' . $ex . '). Batalkan SPK lama terlebih dahulu bila ingin mengganti unit.');
+                }
+            }
+
             // 2) Harga OTR SELALU dari database, bukan dari input klien.
             $st = $pdo->prepare('SELECT price FROM variant_prices WHERE variant_id = ? AND region = ?');
             $st->execute([$unit['variant_id'], cfg('app', 'region')]);
@@ -50,10 +60,10 @@ final class SpkService
                 'TMP-' . $token, $in['lead_id'] ?: null, $salesUser['id'], $unit['id'],
                 $in['customer_name'], $in['nik'], $in['phone'], $in['address'], $in['payment_method'],
                 $calc ? (int)$in['partner_id'] : null, $calc ? $calc['tenor'] : null, $otr,
-                $calc ? $calc['dp'] : 0, $calc ? $calc['admin_fee'] : 0,
+                $calc ? $calc['dp'] : $otr, $calc ? $calc['admin_fee'] : 0,
                 $calc ? $calc['insurance_type'] : null, $calc ? $calc['insurance'] : 0,
                 $calc ? $calc['interest_rate'] : null, $calc ? (int)$in['addm'] : 1,
-                $calc ? $calc['installment'] : 0, $calc ? $calc['tdp'] : 0,
+                $calc ? $calc['installment'] : 0, $calc ? $calc['tdp'] : $otr,
                 $in['booking_fee'], $token,
             ]);
             $id = (int)$pdo->lastInsertId();
@@ -80,13 +90,21 @@ final class SpkService
     {
         $pdo->beginTransaction();
         try {
-            $st = $pdo->prepare('SELECT id, unit_id, status FROM spk WHERE id = ? FOR UPDATE');
+            $st = $pdo->prepare('SELECT id, unit_id, lead_id, status FROM spk WHERE id = ? FOR UPDATE');
             $st->execute([$spkId]);
             $spk = $st->fetch();
             if (!$spk || $spk['status'] !== 'active') throw new DomainException('Hanya SPK aktif yang dapat dibatalkan.');
             $pdo->prepare('SELECT id FROM vehicle_units WHERE id = ? FOR UPDATE')->execute([$spk['unit_id']]);
             $pdo->prepare("UPDATE vehicle_units SET status = 'ready' WHERE id = ?")->execute([$spk['unit_id']]);
             $pdo->prepare("UPDATE spk SET status = 'cancelled' WHERE id = ?")->execute([$spkId]);
+            if ($spk['lead_id']) {
+                $re = $pdo->prepare("UPDATE leads SET status = 'hot' WHERE id = ? AND status = 'won'");
+                $re->execute([$spk['lead_id']]);
+                if ($re->rowCount()) {
+                    $pdo->prepare("INSERT INTO lead_logs(lead_id,user_id,channel,note) VALUES (?,NULL,'sistem',?)")
+                        ->execute([$spk['lead_id'], 'SPK dibatalkan, status lead kembali HOT.']);
+                }
+            }
             $pdo->commit();
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();

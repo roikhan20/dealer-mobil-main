@@ -8,7 +8,7 @@
    mysql -u root -p < database/schema.sql
    mysql -u root -p < database/seed.sql
    ```
-3. Atur koneksi di `config/config.php` (atau env `DB_HOST DB_NAME DB_USER DB_PASS`).
+3. Atur koneksi lewat environment variable `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` (password tidak lagi ditulis di `config/config.php`). Contoh: `DB_PASS='isi-password' php -S localhost:8000 -t public`. Set `APP_DEBUG=1` hanya saat pengembangan.
 4. Buat akun staf demo: `php database/seed_users.php`
 5. Jalankan: arahkan *document root* ke folder `public/`, atau untuk uji lokal:
    ```bash
@@ -29,6 +29,18 @@
 `seed.sql` berisi **37 varian dari 20 model Honda & Suzuki** (Brio, City, Civic, Civic Type R, Accord, WR-V, BR-V, HR-V, CR-V, e:N1, S-Presso, Baleno, Fronx, Ertiga, XL7, Grand Vitara, Jimny, APV Arena, Carry) lengkap dengan warna dan unit VIN contoh. Harga OTR adalah **estimasi untuk demo**, bukan daftar harga resmi. Katalog bisa difilter (merk, tipe, transmisi, BBM, harga maks) dan **diurutkan** (harga termurah/termahal, nama A–Z/Z–A, merk & model, stok, jumlah kursi, kapasitas mesin). VIN demo riwayat servis: `MHRRV1850NJ000099`.
 
 > Jika database lama sudah terisi, impor ulang `schema.sql` (DROP database dulu) sebelum `seed.sql`.
+> Untuk database yang **sudah berjalan** (sebelum revisi alur pemesanan), jalankan sekali:
+> `mysql -u root -p dealer_roket < database/migration_order_flow.sql`
+> (membuat foto KTP/SIM pada test drive menjadi opsional).
+
+### Alur pemesanan pelanggan
+1. **Katalog → Detail → Simulasi Kredit** (per mitra, tenor, DP, asuransi, ADDM/ADDB). Tombol *Lanjut Pesan Mobil Ini* membawa parameter simulasi ke formulir.
+2. **Pesan / Minta Penawaran**: pilih warna, cara bayar (tunai atau kredit), dan isi data. Angka kredit dihitung ulang di server dari tabel leasing. Lead otomatis dibagi ke sales aktif.
+3. **Test Drive** (opsional): pilih tanggal dan jam. Jam yang sudah lewat ditolak. Kapasitas per jam dibatasi (`testdrive_slot_capacity` di config). Foto KTP/SIM boleh diunggah sekarang atau dibawa saat hari H.
+4. **Cek Pesanan**: pelanggan memasukkan kode referensi `LD-xxxxxx` dan 4 digit akhir nomor HP untuk melihat status permintaan dan jadwal test drive.
+5. Sales menerbitkan SPK (tunai atau kredit). Satu lead hanya boleh punya satu SPK aktif. Pembatalan SPK mengembalikan unit ke Ready dan lead ke HOT.
+
+Ketika sales dinonaktifkan atau peran akunnya diubah, lead terbukanya dipindahkan otomatis ke sales aktif. KTP/SIM hanya bisa dibuka oleh sales pemilik lead dan Manajer.
 
 ### Foto mobil
 Setiap model Honda & Suzuki sudah punya 1–3 foto bawaan dari **Wikimedia Commons** (lisensi bebas), diatur di `app/car_photos.php`, **tanpa perubahan database**. Foto tampil langsung dari internet. Agar bisa tampil offline, jalankan sekali:
@@ -36,11 +48,12 @@ Setiap model Honda & Suzuki sudah punya 1–3 foto bawaan dari **Wikimedia Commo
 php tools/download_car_photos.php
 ```
 Foto yang di-upload admin lewat *Master Kendaraan → Edit* selalu didahulukan daripada foto bawaan.
+Untuk memeriksa apakah berkas Commons masih ada (jalankan di komputer yang terhubung internet): `php tools/check_car_photos.php`. Foto yang gagal dimuat di katalog otomatis diganti ikon placeholder.
 
 ### Halaman per peran
 | Peran | Menu |
 |---|---|
-| Pelanggan (tanpa login) | Katalog (filter + urutkan), Detail mobil + galeri, Simulasi kredit, Test drive, Minta penawaran, Booking servis, **Cek status booking**, Riwayat servis (VIN) |
+| Pelanggan (tanpa login) | Katalog (filter + urutkan), Detail mobil + galeri, Simulasi kredit, Test drive, Pesan / minta penawaran, **Cek pesanan**, Booking servis, **Cek servis**, Riwayat servis (VIN) |
 | Admin Inventaris | Dashboard, Master kendaraan (+foto), Stok unit VIN, Parameter leasing, Profil |
 | Sales Executive | Dashboard (jadwal & prospek), Leads, **Jadwal test drive** (konfirmasi/selesai/batal), SPK + cetak, Profil |
 | Service Advisor | Dashboard, Slot servis, **Riwayat servis**, Catat servis walk-in, Profil |
@@ -94,5 +107,7 @@ CSRF token di semua POST (kosong/salah → 419) · PDO prepared statement (`EMUL
 ## 7. Catatan & Batasan (jujur)
 * **PDF**: dokumen SPK/Invoice dibuat sebagai halaman A4 siap cetak dengan QR Code (qrcode.js), lalu *Cetak → Simpan sebagai PDF* dari browser. DomPDF/mPDF tidak dipakai karena proyek ini tanpa Composer. Untuk PDF sisi-server: `composer require dompdf/dompdf endroid/qr-code` lalu render template `spk_print.php`.
 * Library Bootstrap & QR dimuat dari CDN (butuh internet saat dipakai; bisa diunduh lokal).
-* Fitur yang belum ada: notifikasi WhatsApp/email otomatis, rate limiter per-IP (hanya per-sesi), pembayaran online, audit-log lengkap.
+* Fitur yang belum ada: notifikasi WhatsApp/email otomatis, rate limiter per-IP (hanya per-sesi), pembayaran online, audit-log lengkap, opsi simulasi tunai pada kalkulator, pencatatan booking fee sebagai pembayaran.
+* Pengecekan duplikat jadwal dan jam lewat memakai zona waktu server (Asia/Jakarta). Input jam di browser memakai jam perangkat pengunjung, jadi validasi server tetap menjadi acuan.
+* Cek Pesanan memakai kode referensi + 4 digit HP sebagai verifikasi. Ini cukup untuk status sederhana, tetapi belum memakai pembatasan percobaan per-IP.
 * Produksi: aktifkan HTTPS, set `debug=false`, ganti password demo, buat user DB khusus (bukan root), backup rutin.

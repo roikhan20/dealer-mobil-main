@@ -62,7 +62,7 @@ $btn = ['confirmed' => ['Konfirmasi', 'btn-outline-gold', 'check2'], 'done' => [
     <tr>
       <td class="text-nowrap"><strong><?= e(date('d M Y', strtotime($r['scheduled_date']))) ?></strong><div class="small text-secondary"><?= e(substr($r['scheduled_time'], 0, 5)) ?> WIB</div></td>
       <td><div class="d-flex align-items-center gap-2"><?php if ($cv): ?><img class="car-img car-thumb" src="<?= e($cv) ?>" alt="" loading="lazy"><?php endif; ?><span class="small"><?= e($r['brand'] . ' ' . $r['variant']) ?></span></div></td>
-      <td><a href="<?= e(url('admin/lead_view.php?id=' . (int)$r['lead_id'])) ?>"><?= e($r['customer']) ?></a><div class="small text-secondary"><?= e($r['phone']) ?> · <a href="<?= e(url('admin/file.php?f=' . urlencode($r['id_photo']))) ?>" target="_blank">KTP/SIM</a></div></td>
+      <td><a href="<?= e(url('admin/lead_view.php?id=' . (int)$r['lead_id'])) ?>"><?= e($r['customer']) ?></a><div class="small text-secondary"><?= e($r['phone']) ?> · <?php if ($r['id_photo']): ?><a href="<?= e(url('admin/file.php?f=' . urlencode($r['id_photo']))) ?>" target="_blank">KTP/SIM</a><?php endif; ?></div></td>
       <?php if ($isMgr): ?><td class="small"><?= e($r['sales_name'] ?? '-') ?></td><?php endif; ?>
       <td><?= badge($r['status']) ?></td>
       <td class="text-end text-nowrap">
