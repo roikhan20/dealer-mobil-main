@@ -6,7 +6,7 @@ return [
         'host' => getenv('DB_HOST') ?: '127.0.0.1',
         'name' => getenv('DB_NAME') ?: 'dealer_roket',
         'user' => getenv('DB_USER') ?: 'root',
-        'pass' => getenv('DB_PASS') ?: 'rijal123',
+        'pass' => getenv('DB_PASS') ?: '',
     ],
     'app' => [
         'company' => 'PT Penerbang Roket',

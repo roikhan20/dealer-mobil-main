@@ -89,7 +89,7 @@ document.addEventListener('error', (e) => {
           <a class="btn btn-sm btn-outline-secondary text-truncate" style="max-width:240px" href="<?= e(url('admin/profile.php')) ?>" title="Profil &amp; ganti password"><i class="bi bi-person-circle me-1"></i><?= e($user['name']) ?> <span class="d-none d-xxl-inline text-secondary">· <?= e(ROLE_LABELS[$user['role']]) ?></span></a>
           <form method="post" action="<?= e(url('logout.php')) ?>" class="m-0"><?= csrf_field() ?><button class="btn btn-sm btn-outline-light"><i class="bi bi-box-arrow-right me-1"></i>Keluar</button></form>
         <?php else: ?>
-          <a class="btn btn-sm btn-outline-light" href="<?= e(url('login.php')) ?>"><i class="bi bi-person-lock me-1"></i>Login Staf</a>
+          <a class="btn btn-sm btn-outline-light" href="<?= e(url('login.php')) ?>"><i class="bi bi-person-lock me-1"></i>Login</a>
         <?php endif; ?>
       </div>
     </div>
